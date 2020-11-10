@@ -21,6 +21,7 @@
     keyRight = 39,
     keyDown = 40,
     dir = 1,
+    prevDir = undefined,
     //Pause
     stop = true,
     gameOver = false,
@@ -30,9 +31,20 @@
     posHighscore = 10;
 
     //assets
-    var iNeck = new Image(),
-    iBody = new Image(),
-    iTale = new Image(),
+    var iHeadUp = new Image(),
+    iHeadDown = new Image(),
+    iHeadRight = new Image(),
+    iHeadLeft = new Image(),
+    iNeckUp = new Image(),
+    iNeckDown = new Image(),
+    iNeckLeft = new Image(),
+    iNeckRight = new Image(),
+    iBodyVert = new Image(),
+    iBodySide = new Image(),
+    iTaleRight = new Image(),
+    iTaleUp = new Image(),
+    iTaleDown = new Image(),
+    iTaleLeft = new Image(),
     iApple = new Image(),
     aEat = new Audio(),
     aSpecial = new Audio(),
@@ -51,7 +63,8 @@
     var mainScene = undefined,
         gameScene = undefined,
         scoresScene = undefined;
-
+    //Fetch
+    var url = 'https://jsonplaceholder.typicode.com/?score=10'
     //Objets and prototypes
     function scene() {
         this.id = scenes.length;
@@ -112,6 +125,7 @@
             }
         }
     }
+    //Function GET
     
     //Random
     function random(max){
@@ -185,15 +199,19 @@
 
             //worm Movement
             if (lastCommand === keyUp && dir !== 2 || lastCommand === 'ArrowUp' && dir != 2) {
+                prevDir = dir;
                 dir = 0;
             }
             if (lastCommand === keyRight && dir !== 3 || lastCommand === 'ArrowRight'&& dir !== 3 ) {
+                prevDir = dir;
                 dir = 1;
             }
             if (lastCommand === keyDown && dir !== 0 || lastCommand === 'ArrowDown' && dir !== 0) {
+                prevDir = dir;
                 dir = 2;
             }
             if (lastCommand === keyLeft && dir !== 1 || lastCommand === 'ArrowLeft' && dir !== 1) {
+                prevDir = dir;
                 dir = 3;
             }
 
@@ -238,23 +256,32 @@
                 lastCommand = null;
             }
             //Hit box Colisions
+                //food
             if (body[0].intersect(food)) {
-                    body.push(new rectangle(0, 0, 10, 10));
-                    score += 1;
-                    aEat.play();
-                    if(specialCountdown === 5){
-                        special.x = random(buffer.width / 10 - 1) * 10;
-                        special.y = random(buffer.height / 10 - 1) * 10;
-                        specialCountdown = 0;
-                    } else {
-                        specialCountdown += 1;
-                    }
+                body.push(new rectangle(0, 0, 10, 10));
+                score += 1;
+                aEat.play();
+                if(specialCountdown === 5){
+                    special.x = random(buffer.width / 10 - 1) * 10;
+                    special.y = random(buffer.height / 10 - 1) * 10;
+                    specialCountdown = 0;
+                } else {
+                    specialCountdown += 1;
+                }
+                food.x = random(buffer.width / 10 - 1) * 10;
+                food.y = random(buffer.height / 10 - 1) * 10;
+                    
+            }
+                //special
+                if (food.intersect(special)){
                     food.x = random(buffer.width / 10 - 1) * 10;
                     food.y = random(buffer.height / 10 - 1) * 10;
-                    
                 }
-            if (body[0].intersect(special)) {
+            if (body[0].intersect(special)) {                
                 if(specialCountdown === 5){
+                    fetch(url)
+                    .then(() => console.log("Score sent succesfully"))
+                    .catch(() => console.log("Something went wrong"));
                     score += 10;
                     aSpecial.play();
                     food.x = random(buffer.width / 10 - 1) * 10;
@@ -262,7 +289,7 @@
                     specialCountdown = 0;
                 }
             }
-
+                //Obstacle
             for (var i = 0, l = wall.length; i < l; i += 1) {
                 if (food.intersect(wall[i])) {
                     food.x = random(buffer.width / 10 - 1) * 10;
@@ -280,6 +307,7 @@
                     gameOver = true; 
                 }
             }
+                //Body
             for (var i = 2; i < body.length; i += 1) {
                 if (body[0].intersect(body[i])) {
                     aDie.play();
@@ -290,7 +318,7 @@
             }
             
     }
-
+    
     //Rendering of the playable screen
     gameScene.paint = function(bufferCtx){
         //Clean canvas
@@ -299,20 +327,50 @@
     
         //Draw snake
         for (var i = 0; i < body.length; i++){
+            var follow = 0
             if (i === 0){
-                bufferCtx.fillStyle = '#E7D084'
-                body[i].fill(bufferCtx);
+                if(dir === 0 ){
+                    body[i].drawImage(bufferCtx, iHeadUp);
+                    follow = 1;
+                } else if(dir === 1 ){
+                    body[i].drawImage(bufferCtx, iHeadRight)
+                    follow = 2;
+                } else if(dir === 2 ){
+                    body[i].drawImage(bufferCtx, iHeadDown)
+                } else if(dir === 3 ){
+                    body[i].drawImage(bufferCtx, iHeadLeft)
+                }
             } else if(i === 1) {
-                body[i].drawImage(bufferCtx, iNeck);
+                if(dir === 0 ){
+                    body[i].drawImage(bufferCtx, iNeckUp);
+                } else if(dir === 1 ){
+                    body[i].drawImage(bufferCtx, iNeckRight)
+                } else if(dir === 2 ){
+                    body[i].drawImage(bufferCtx, iNeckDown)
+                } else if(dir === 3 ){
+                    body[i].drawImage(bufferCtx, iNeckLeft)
+                }
             } else if (i < body.length -1){
-                body[i].drawImage(bufferCtx, iBody);
+                if(dir === 0 || dir === 2 ){
+                    body[i].drawImage(bufferCtx, iBodyVert);
+                } else if(dir === 1 || dir === 3){
+                    body[i].drawImage(bufferCtx, iBodySide)
+                }
             } else {
-                body[i].drawImage(bufferCtx, iTale);
+                if(dir === 0 ){
+                    body[i].drawImage(bufferCtx, iTaleUp);
+                } else if(dir === 1 ){
+                    body[i].drawImage(bufferCtx, iTaleRight)
+                } else if(dir === 2 ){
+                    body[i].drawImage(bufferCtx, iTaleDown)
+                } else if(dir === 3 ){
+                    body[i].drawImage(bufferCtx, iTaleLeft)
+                }
             }
         }
         // Draw apple
         food.drawImage(bufferCtx, iApple);
-        
+
         //Draw special
         if(specialCountdown === 5){
             special.drawImage(bufferCtx, iSpecial);
@@ -394,7 +452,7 @@
     }
     
     function run() {
-        setTimeout(run, 25);
+        setTimeout(run, 40);
         //Get FPS
         var now = Date.now(),
             deltaTime = (now - lastUpdate) / 1000;
@@ -460,13 +518,24 @@
         //Create obstacles
         wall.push(new rectangle(100, 50, 10, 10));
         wall.push(new rectangle(200, 50, 10, 10));
-        wall.push(new rectangle(100, 100, 10, 10));
+        // wall.push(new rectangle(100, 100, 10, 10));
         wall.push(new rectangle(110, 110, 90, 10));
-        wall.push(new rectangle(200, 100, 10, 10));
+        // wall.push(new rectangle(200, 100, 10, 10));
         //Load assets
-        iNeck.src = 'assets/neck.png';
-        iBody.src = 'assets/body.png';
-        iTale.src = 'assets/tale.png';
+        iHeadUp.src = 'assets/head/head-up.png'
+        iHeadDown.src = 'assets/head/head-down.png'
+        iHeadRight.src = 'assets/head/head-right.png'
+        iHeadLeft.src = 'assets/head/head-left.png'
+        iNeckUp.src = 'assets/neck/neck-up.png';
+        iNeckDown.src = 'assets/neck/neck-down.png';
+        iNeckLeft.src = 'assets/neck/neck-left.png';
+        iNeckRight.src = 'assets/neck/neck-right.png';
+        iBodyVert.src = 'assets/body/body-vert.png';
+        iBodySide.src = 'assets/body/body-side.png';
+        iTaleUp.src = 'assets/tale/tale-up.png';
+        iTaleDown.src = 'assets/tale/tale-down.png';
+        iTaleRight.src = 'assets/tale/tale-right.png';
+        iTaleLeft.src = 'assets/tale/tale-left.png';
         iApple.src = 'assets/apple.png';
         iSpecial.src = 'assets/special.png'
         aEat.src = 'assets/eat.wav';
