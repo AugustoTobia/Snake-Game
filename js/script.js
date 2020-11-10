@@ -12,6 +12,8 @@
     body = [],
     food = new rectangle(80, 80, 10, 10),
     wall = [],
+    special = new rectangle(20, 20, 10, 10),
+    specialCountdown = 0,
     //Controls
     lastCommand = undefined,
     keyLeft = 37,
@@ -34,7 +36,8 @@
     iApple = new Image(),
     aEat = new Audio(),
     aSpecial = new Audio(),
-    aDie = new Audio();
+    aDie = new Audio(),
+    iSpecial = new Image();
 
     //FPS calculation
     var lastUpdate = 0,
@@ -239,14 +242,35 @@
                     body.push(new rectangle(0, 0, 10, 10));
                     score += 1;
                     aEat.play();
+                    if(specialCountdown === 5){
+                        special.x = random(buffer.width / 10 - 1) * 10;
+                        special.y = random(buffer.height / 10 - 1) * 10;
+                        specialCountdown = 0;
+                    } else {
+                        specialCountdown += 1;
+                    }
                     food.x = random(buffer.width / 10 - 1) * 10;
                     food.y = random(buffer.height / 10 - 1) * 10;
+                    
                 }
+            if (body[0].intersect(special)) {
+                if(specialCountdown === 5){
+                    score += 10;
+                    aSpecial.play();
+                    food.x = random(buffer.width / 10 - 1) * 10;
+                    food.y = random(buffer.height / 10 - 1) * 10;
+                    specialCountdown = 0;
+                }
+            }
 
             for (var i = 0, l = wall.length; i < l; i += 1) {
                 if (food.intersect(wall[i])) {
                     food.x = random(buffer.width / 10 - 1) * 10;
                     food.y = random(buffer.height / 10 - 1) * 10;
+                }
+                if (special.intersect(wall[i])) {
+                    special.x = random(buffer.width / 10 - 1) * 10;
+                    special.y = random(buffer.height / 10 - 1) * 10;
                 }
                 if (body[0].intersect(wall[i])) {
                     aDie.play();
@@ -288,7 +312,11 @@
         }
         // Draw apple
         food.drawImage(bufferCtx, iApple);
-        bufferCtx.fillStyle = '#fff'
+        
+        //Draw special
+        if(specialCountdown === 5){
+            special.drawImage(bufferCtx, iSpecial);
+        }
 
         //Draw obstacle
         bufferCtx.fillStyle = '#066'
@@ -400,8 +428,11 @@
         body.push(new rectangle(0, 0, 10, 10));
         food.x = random(buffer.width / 10 - 1) * 10;
         food.y = random(buffer.height / 10 - 1) * 10;
+        special.x = random(buffer.width / 10 - 1) * 10;
+        special.y = random(buffer.height / 10 - 1) * 10;
         stop = false;
         gameOver = false;
+        specialCountdown = 0;
         aDie.pause();
         aDie.load();
     }
@@ -424,6 +455,8 @@
         body.push(new rectangle(0, 0, 10, 10));
         //Create food
         food = new rectangle(80, 80, 10, 10);
+        //Create special
+        special = new rectangle(20, 20, 10, 10);
         //Create obstacles
         wall.push(new rectangle(100, 50, 10, 10));
         wall.push(new rectangle(200, 50, 10, 10));
@@ -435,6 +468,7 @@
         iBody.src = 'assets/body.png';
         iTale.src = 'assets/tale.png';
         iApple.src = 'assets/apple.png';
+        iSpecial.src = 'assets/special.png'
         aEat.src = 'assets/eat.wav';
         aSpecial.src ='assets/special.wav';
         aDie.src = 'assets/death.mp4';
